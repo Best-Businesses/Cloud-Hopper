@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Hopper Bird Game</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewTheFlock.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+       
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #87CEEB, #1E90FF);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+       
+        .game-container {
+            position: relative;
+            width: 90%;
+            max-width: 800px;
+            height: 80vh;
+            max-height: 600px;
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+       
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+       
+        .score-container, .lives-container {
+            background: rgba(255, 255, 255, 0.85);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+       
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 20;
+            transition: opacity 0.5s;
+            text-align: center;
+            padding: 20px;
+            cursor: pointer;
+        }
+       
+        .screen h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: #3498db;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(to right, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+       
+        .screen h2 {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+       
+        .screen p {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            max-width: 80%;
+            line-height: 1.5;
+            color: #555;
+        }
+       
+        .btn {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.3s;
+            margin-top: 20px;
+            font-weight: bold;
+            -webkit-tap-highlight-color: transparent;
+        }
+       
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.25);
+        }
+       
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+       
+        .btn-secondary {
+            background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+        }
+       
+        .btn-secondary:hover {
+            background: linear-gradient(to bottom, #7f8c8d, #6c7b7d);
+        }
+       
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            cursor: pointer;
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FF);
+            -webkit-tap-highlight-color: transparent;
+        }
+       
+        .bird {
+            position: absolute;
+            width: 60px;
+            height: 45px;
+            z-index: 5;
+            transition: transform 0.2s;
+            user-select: none;
+            filter: drop-shadow(3px 3px 5px rgba(0,0,0,0.3));
+        }
+
+        .bird img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+       
+        .eagle {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            z-index: 6;
+            user-select: none;
+            filter: drop-shadow(3px 3px 5px rgba(0,0,0,0.4));
+        }
+
+        .eagle img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+       
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            z-index: 4;
+        }
+       
+        .instructions {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1rem;
+            color: #666;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+       
+        .character-selection {
+            display: flex;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+       
+        .character-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            -webkit-tap-highlight-color: transparent;
+        }
+       
+        .character-option:hover {
+            transform: translateY(-5px);
+            background: rgba(52, 152, 219, 0.1);
+        }
+       
+        .character-option.selected {
+            border-color: #3498db;
+            background: rgba(52, 152, 219, 0.15);
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+       
+        .character-image {
+            width: 60px;
+            height: 45px;
+            margin-bottom: 10px;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .character-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+       
+        .character-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+       
+        .eagle-warning {
+            position: absolute;
+            top: 120px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 2.5rem;
+            color: #e74c3c;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            z-index: 15;
+            animation: pulse 0.8s infinite;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+            margin: 0 auto;
+        }
+
+        .ad-video-container {
+            width: 90%;
+            max-width: 640px;
+            margin: 20px auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .ad-video-container video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .continue-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+       
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+       
+        .jump-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 1.1rem;
+            color: #2c3e50;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            max-width: 200px;
+            margin: 0 auto;
+            font-weight: bold;
+        }
+
+        .touch-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .touch-left, .touch-right, .touch-jump {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            pointer-events: auto;
+            -webkit-tap-highlight-color: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .touch-jump {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(52, 152, 219, 0.3);
+        }
+       
+        /* Desktop-specific fixes */
+        @media (min-width: 1024px) {
+            .game-container {
+                height: 600px;
+                width: 800px;
+            }
+            .touch-controls {
+                display: none;
+            }
+        }
+       
+        @media (max-width: 768px) {
+            .game-container {
+                width: 95%;
+                height: 70vh;
+            }
+           
+            .screen h1 {
+                font-size: 2.8rem;
+            }
+           
+            .screen h2 {
+                font-size: 1.8rem;
+            }
+           
+            .btn {
+                padding: 12px 30px;
+                font-size: 1.1rem;
+            }
+           
+            .bird {
+                width: 50px;
+                height: 38px;
+            }
+           
+            .eagle {
+                width: 50px;
+                height: 50px;
+            }
+           
+            .character-image {
+                width: 50px;
+                height: 38px;
+            }
+           
+            .character-selection {
+                gap: 15px;
+            }
+
+            .touch-left, .touch-right, .touch-jump {
+                width: 70px;
+                height: 70px;
+                font-size: 1.3rem;
+            }
+        }
+       
+        @media (max-width: 480px) {
+            .screen h1 {
+                font-size: 2.2rem;
+            }
+           
+            .screen h2 {
+                font-size: 1.6rem;
+            }
+           
+            .screen p {
+                font-size: 1rem;
+            }
+           
+            .btn {
+                padding: 10px 25px;
+                font-size: 1rem;
+            }
+           
+            .bird {
+                width: 42px;
+                height: 32px;
+            }
+           
+            .eagle {
+                width: 42px;
+                height: 42px;
+            }
+           
+            .character-image {
+                width: 42px;
+                height: 32px;
+            }
+           
+            .character-selection {
+                gap: 10px;
+            }
+           
+            .character-option {
+                padding: 15px;
+            }
+           
+            .eagle-warning {
+                font-size: 1.8rem;
+            }
+
+            .touch-left, .touch-right, .touch-jump {
+                width: 60px;
+                height: 60px;
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-ui">
+            <div class="score-container">Height: <span id="score">0</span>m</div>
+            <div class="lives-container">Lives: <span id="lives">3</span></div>
+        </div>
+       
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <h1>Cloud Hopper</h1>
+            <p>Help your bird fly upward through endless clouds!</p>
+            <p>Watch out for eagles! Jump to avoid them!</p>
+            <p>You can only jump 6 times in a row before needing to land!</p>
+            <button id="start-btn" class="btn">Choose Your Bird</button>
+            <div class="instructions">
+                <p>Desktop: Arrow keys + SPACE<br>Mobile: Use touch controls below</p>
+            </div>
+        </div>
+       
+        <!-- Character Selection Screen -->
+        <div id="character-screen" class="screen" style="display: none;">
+            <h2>Choose Your Bird</h2>
+            <p>Select your favorite bird to start the adventure!</p>
+            <div class="character-selection">
+                <div class="character-option" data-bird="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewBlueBird.png">
+                    <div class="character-image">
+                        <img src="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewBlueBird.png" alt="Blue Bird">
+                    </div>
+                    <div class="character-name">Blue Bird</div>
+                </div>
+                <div class="character-option" data-bird="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/PinkBird.png">
+                    <div class="character-image">
+                        <img src="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/PinkBird.png" alt="Pink Bird">
+                    </div>
+                    <div class="character-name">Pink Bird</div>
+                </div>
+                <div class="character-option" data-bird="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewBlackBird.png">
+                    <div class="character-image">
+                        <img src="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewBlackBird.png" alt="Black Bird">
+                    </div>
+                    <div class="character-name">Black Bird</div>
+                </div>
+                <div class="character-option" data-bird="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewYellowBird.png">
+                    <div class="character-image">
+                        <img src="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewYellowBird.png" alt="Yellow Bird">
+                    </div>
+                    <div class="character-name">Yellow Bird</div>
+                </div>
+                <div class="character-option" data-bird="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewGreenBird.png">
+                    <div class="character-image">
+                        <img src="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewGreenBird.png" alt="Green Bird">
+                    </div>
+                    <div class="character-name">Green Bird</div>
+                </div>
+                <div class="character-option" data-bird="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/OrangeBird.png">
+                    <div class="character-image">
+                        <img src="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/OrangeBird.png" alt="Orange Bird">
+                    </div>
+                    <div class="character-name">Orange Bird</div>
+                </div>
+                <div class="character-option" data-bird="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewRedBird.png">
+                    <div class="character-image">
+                        <img src="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewRedBird.png" alt="Red Bird">
+                    </div>
+                    <div class="character-name">Red Bird</div>
+                </div>
+                <div class="character-option" data-bird="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/GrayBird.png">
+                    <div class="character-image">
+                        <img src="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/GrayBird.png" alt="Gray Bird">
+                    </div>
+                    <div class="character-name">Gray Bird</div>
+                </div>
+            </div>
+            <button id="confirm-character" class="btn" disabled>Start Flying!</button>
+            <button id="back-btn" class="btn btn-secondary">Back</button>
+        </div>
+
+        <!-- Continue After Ad Screen -->
+        <div id="continue-screen" class="screen" style="display: none;">
+            <h2>Continue Playing?</h2>
+            <p>Watch a short ad to get an extra life and keep flying!</p>
+            <div class="ad-video-container">
+                <video id="ad-video" controls>
+                    <source src="https://github.com/TitanBusinessPros/Zombie-Outbreak-Honolulu/raw/main/Ad-2-Zombie.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div class="continue-options">
+                <button id="continue-btn" class="btn" disabled>Continue (+1 Life)</button>
+                <button id="end-game-btn" class="btn btn-secondary">Play Again</button>
+            </div>
+        </div>
+       
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="screen" style="display: none;">
+            <h1>Game Over</h1>
+            <p>Your final height: <span id="final-score">0</span> meters</p>
+            <button id="restart-btn" class="btn">Play Again</button>
+        </div>
+       
+        <!-- Game Area -->
+        <div class="game-area" id="game-area">
+            <div id="bird" class="bird">
+                <img src="https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewBlueBird.png" alt="Bird">
+            </div>
+            <div id="eagle-warning" class="eagle-warning" style="display: none;">EAGLE! JUMP!</div>
+            <div id="jump-counter" class="jump-counter" style="display: none;">Jumps: 0/6</div>
+            
+            <!-- Touch Controls -->
+            <div class="touch-controls">
+                <div class="touch-left">←</div>
+                <div class="touch-right">→</div>
+                <div class="touch-jump">JUMP</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game variables - RESET EVERY TIME
+        let score = 0;
+        let lives = 3;
+        let gameActive = false;
+        let birdPosition = { x: 0, y: 0 };
+        let birdVelocity = { x: 0, y: 0 };
+        let clouds = [];
+        let eagles = [];
+        let isMovingLeft = false;
+        let isMovingRight = false;
+        let scrollOffset = 0;
+        let highestPoint = 0;
+        let difficultyLevel = 1;
+        let eagleShown = false;
+        let consecutiveJumps = 0;
+        let maxConsecutiveJumps = 6;
+        let selectedBird = "https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewBlueBird.png"; // Default bird
+        let lastEagleSpawn = 0;
+        let lastJumpTime = 0;
+        let hasUsedContinue = false; // Track if player already used continue
+       
+        // FIXED PHYSICS - STRONGER GRAVITY FOR FASTER FALLING
+        const BASE_GRAVITY = 0.30;
+        const BASE_JUMP_POWER = 6;
+        const BASE_MOVE_SPEED = 5;
+        const BASE_SCROLL_SPEED = 2.5;
+        const CLOUD_GAP = 120;
+        const MIN_CLOUD_WIDTH = 100;
+        const MAX_CLOUD_WIDTH = 160;
+        const EAGLE_SPEED = 4;
+        const PREDATOR_BIRDS = [
+            "https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/NewEagle.png",
+            "https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/Hawk.png",
+            "https://raw.githubusercontent.com/Best-Businesses/Cloud-Hopper/main/Falcon.png"
+        ];
+        let currentPredatorIndex = 0; // Track which predator to use next
+       
+        // Current game speeds (will increase with difficulty)
+        let currentGravity = BASE_GRAVITY;
+        let currentJumpPower = BASE_JUMP_POWER;
+        let currentMoveSpeed = BASE_MOVE_SPEED;
+        let currentScrollSpeed = BASE_SCROLL_SPEED;
+       
+        // DOM elements
+        const startScreen = document.getElementById('start-screen');
+        const characterScreen = document.getElementById('character-screen');
+        const continueScreen = document.getElementById('continue-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const startBtn = document.getElementById('start-btn');
+        const confirmCharacterBtn = document.getElementById('confirm-character');
+        const backBtn = document.getElementById('back-btn');
+        const continueBtn = document.getElementById('continue-btn');
+        const endGameBtn = document.getElementById('end-game-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreElement = document.getElementById('score');
+        const livesElement = document.getElementById('lives');
+        const finalScoreElement = document.getElementById('final-score');
+        const bird = document.getElementById('bird');
+        const gameArea = document.getElementById('game-area');
+        const eagleWarning = document.getElementById('eagle-warning');
+        const jumpCounter = document.getElementById('jump-counter');
+        const characterOptions = document.querySelectorAll('.character-option');
+        const touchLeft = document.querySelector('.touch-left');
+        const touchRight = document.querySelector('.touch-right');
+        const touchJump = document.querySelector('.touch-jump');
+        const adVideo = document.getElementById('ad-video');
+
+        // Character selection
+        startBtn.addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            characterScreen.style.display = 'flex';
+        });
+
+        backBtn.addEventListener('click', () => {
+            characterScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+        });
+
+        characterOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                // Remove selected class from all options
+                characterOptions.forEach(opt => opt.classList.remove('selected'));
+               
+                // Add selected class to clicked option
+                option.classList.add('selected');
+               
+                // Enable confirm button
+                confirmCharacterBtn.disabled = false;
+               
+                // Store selected bird
+                selectedBird = option.getAttribute('data-bird');
+            });
+        });
+
+        confirmCharacterBtn.addEventListener('click', () => {
+            characterScreen.style.display = 'none';
+            initGame();
+        });
+
+        // Game initialization - COMPLETE RESET
+        function initGame() {
+            console.log("Initializing game with selected bird:", selectedBird);
+           
+            // Reset all variables
+            score = 0;
+            lives = 3;
+            gameActive = true;
+            hasUsedContinue = false; // Reset continue flag for new game
+            birdPosition = {
+                x: gameArea.offsetWidth / 2 - 30,
+                y: gameArea.offsetHeight - 150
+            };
+            birdVelocity = { x: 0, y: 0 };
+            clouds = [];
+            eagles = [];
+            isMovingLeft = false;
+            isMovingRight = false;
+            scrollOffset = 0;
+            highestPoint = 0;
+            difficultyLevel = 1;
+            eagleShown = false;
+            consecutiveJumps = 0;
+            lastEagleSpawn = 0;
+            lastJumpTime = 0;
+            currentPredatorIndex = 0; // Reset predator cycle
+           
+            // Reset speeds to base values
+            currentGravity = BASE_GRAVITY;
+            currentJumpPower = BASE_JUMP_POWER;
+            currentMoveSpeed = BASE_MOVE_SPEED;
+            currentScrollSpeed = BASE_SCROLL_SPEED;
+           
+            // Set selected bird image
+            bird.querySelector('img').src = selectedBird;
+            
+            // Check if this bird needs to be flipped by default (faces wrong direction in image)
+            const needsFlip = selectedBird.includes('PinkBird') || selectedBird.includes('YellowBird') || 
+                            selectedBird.includes('OrangeBird') || selectedBird.includes('GrayBird');
+            
+            // Set initial transform based on bird orientation
+            bird.style.transform = needsFlip ? 'scaleX(-1)' : 'scaleX(1)';
+           
+            updateUI();
+            startScreen.style.display = 'none';
+            characterScreen.style.display = 'none';
+            continueScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            eagleWarning.style.display = 'none';
+            jumpCounter.style.display = 'block';
+            updateJumpCounter();
+           
+            // Clear existing game objects
+            document.querySelectorAll('.cloud, .eagle').forEach(element => element.remove());
+           
+            updateBirdPosition();
+            createInitialClouds();
+           
+            // Cancel any existing game loop before starting a new one
+            if (gameLoopId !== null) {
+                cancelAnimationFrame(gameLoopId);
+                gameLoopId = null;
+            }
+           
+            // Start fresh game loop
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function createInitialClouds() {
+            const gameWidth = gameArea.offsetWidth;
+            const gameHeight = gameArea.offsetHeight;
+           
+            // Starting cloud right under the bird
+            createCloud(gameWidth / 2 - 75, gameHeight - 100, 150, 60);
+           
+            // More clouds below the starting position to prevent death cycle
+            for (let i = 1; i < 5; i++) {
+                const x = 30 + Math.random() * (gameWidth - 160);
+                const y = gameHeight - 100 + (i * 80);
+                createCloud(x, y, MIN_CLOUD_WIDTH + Math.random() * (MAX_CLOUD_WIDTH - MIN_CLOUD_WIDTH), 50);
+            }
+           
+            // Clouds above
+            for (let i = 1; i < 11; i++) {
+                const x = 30 + Math.random() * (gameWidth - 160);
+                const y = gameHeight - 100 - (i * CLOUD_GAP);
+                createCloud(x, y, MIN_CLOUD_WIDTH + Math.random() * (MAX_CLOUD_WIDTH - MIN_CLOUD_WIDTH), 50);
+            }
+        }
+
+        function createCloud(x, y, width, height) {
+            const cloud = document.createElement('div');
+            cloud.className = 'cloud';
+            cloud.style.left = x + 'px';
+            cloud.style.top = y + 'px';
+            cloud.style.width = width + 'px';
+            cloud.style.height = height + 'px';
+           
+            // Create fluffy cloud effect
+            cloud.innerHTML = `
+                <div style="position:absolute; width:${width*0.6}px; height:${height*0.6}px; background:white; border-radius:50%; top:-${height*0.3}px; left:${width*0.2}px;"></div>
+                <div style="position:absolute; width:${width*0.5}px; height:${height*0.5}px; background:white; border-radius:50%; top:-${height*0.2}px; left:${width*0.05}px;"></div>
+                <div style="position:absolute; width:${width*0.5}px; height:${height*0.5}px; background:white; border-radius:50%; top:-${height*0.2}px; right:${width*0.05}px;"></div>
+            `;
+           
+            gameArea.appendChild(cloud);
+            clouds.push({ element: cloud, x, y, width, height, visited: false });
+        }
+
+        function createEagle() {
+            if (eagleShown || eagles.length > 0) return;
+           
+            const eagle = document.createElement('div');
+            eagle.className = 'eagle';
+            
+            // Get the current predator bird and cycle to next
+            const predatorImage = PREDATOR_BIRDS[currentPredatorIndex];
+            const predatorNames = ["EAGLE", "HAWK", "FALCON"];
+            const predatorName = predatorNames[currentPredatorIndex];
+            currentPredatorIndex = (currentPredatorIndex + 1) % PREDATOR_BIRDS.length;
+            
+            eagle.innerHTML = `<img src="${predatorImage}" alt="Predator Bird">`;
+            
+            // Randomly choose which side the eagle comes from
+            const comesFromLeft = Math.random() > 0.5;
+            let startX, direction;
+            
+            if (comesFromLeft) {
+                startX = -50;
+                direction = 1; // Moving right
+                // Eagle flying right - normal orientation
+                eagle.style.transform = 'scaleX(1)';
+            } else {
+                startX = gameArea.offsetWidth + 50;
+                direction = -1; // Moving left
+                // Eagle flying left - flip it
+                eagle.style.transform = 'scaleX(-1)';
+            }
+            
+            eagle.style.left = startX + 'px';
+            eagle.style.top = (birdPosition.y - 50 + Math.random() * 100) + 'px';
+           
+            gameArea.appendChild(eagle);
+            eagles.push({ 
+                element: eagle, 
+                x: startX, 
+                y: parseFloat(eagle.style.top), 
+                active: true,
+                direction: direction,
+                speed: EAGLE_SPEED
+            });
+           
+            eagleWarning.textContent = `${predatorName}! JUMP!`;
+            eagleWarning.style.display = 'block';
+            eagleShown = true;
+            lastEagleSpawn = score;
+           
+            setTimeout(() => {
+                eagleWarning.style.display = 'none';
+            }, 2500);
+        }
+
+        function updateBirdPosition() {
+            bird.style.left = birdPosition.x + 'px';
+            bird.style.top = birdPosition.y + 'px';
+        }
+
+        let gameLoopId = null; // Track the animation frame ID
+        
+        function gameLoop() {
+            if (!gameActive) {
+                gameLoopId = null;
+                return;
+            }
+           
+            // Apply physics - MAKE SURE WE USE UPDATED VALUES
+            birdVelocity.y += currentGravity;
+           
+            // Movement - USE THE UPDATED currentMoveSpeed
+            // Check if this bird needs to be flipped (Pink, Yellow, Orange, Gray face wrong way)
+            const needsFlip = selectedBird.includes('PinkBird') || selectedBird.includes('YellowBird') || 
+                            selectedBird.includes('OrangeBird') || selectedBird.includes('GrayBird');
+            
+            if (isMovingLeft) {
+                birdVelocity.x = -currentMoveSpeed;
+                // If bird needs flip, reverse the transform logic
+                bird.style.transform = needsFlip ? 'scaleX(1)' : 'scaleX(-1)';
+            } else if (isMovingRight) {
+                birdVelocity.x = currentMoveSpeed;
+                // If bird needs flip, reverse the transform logic
+                bird.style.transform = needsFlip ? 'scaleX(-1)' : 'scaleX(1)';
+            } else {
+                birdVelocity.x *= 0.9;
+            }
+           
+            // Update position
+            birdPosition.x += birdVelocity.x;
+            birdPosition.y += birdVelocity.y;
+           
+            // Boundaries
+            birdPosition.x = Math.max(0, Math.min(gameArea.offsetWidth - 60, birdPosition.x));
+           
+            // Scrolling with current speed - USE UPDATED currentScrollSpeed
+            scrollOffset += currentScrollSpeed;
+            
+            // DEBUG: Log every 60 frames (about once per second)
+            if (Math.floor(scrollOffset) % 60 === 0) {
+                console.log(`Current scroll speed: ${currentScrollSpeed}, Difficulty: ${difficultyLevel}`);
+            }
+            
+            moveAllClouds();
+            moveEagles();
+           
+            // Score and difficulty
+            const currentHeight = Math.floor(scrollOffset / 10);
+            if (currentHeight > highestPoint) {
+                highestPoint = currentHeight;
+                score = highestPoint;
+                updateUI();
+               
+                const newLevel = 1 + Math.floor(score / 100);
+                if (newLevel !== difficultyLevel) {
+                    difficultyLevel = newLevel;
+                   
+                    // GRADUAL SPEED INCREASE - 15% faster each 100m
+                    const speedMultiplier = 1 + ((difficultyLevel - 1) * 0.15);
+                    currentScrollSpeed = BASE_SCROLL_SPEED * speedMultiplier;
+                    currentMoveSpeed = BASE_MOVE_SPEED * speedMultiplier;
+                    // Also increase gravity and jump power for more challenge
+                    currentGravity = BASE_GRAVITY * speedMultiplier;
+                    currentJumpPower = BASE_JUMP_POWER * speedMultiplier;
+                   
+                    console.log(`Level ${difficultyLevel}: Speed increased to ${speedMultiplier.toFixed(2)}x`);
+                    console.log(`  Scroll: ${currentScrollSpeed.toFixed(2)}, Move: ${currentMoveSpeed.toFixed(2)}`);
+                    console.log(`  Gravity: ${currentGravity.toFixed(2)}, Jump: ${currentJumpPower.toFixed(2)}`);
+                }
+            }
+           
+            // Spawn eagles randomly based on difficulty
+            if (difficultyLevel >= 2 && score - lastEagleSpawn > 150 && Math.random() < 0.02) {
+                createEagle();
+            }
+           
+            // Collisions
+            checkCloudLanding();
+            checkEagleCollisions();
+           
+            // Game over check
+            if (birdPosition.y > gameArea.offsetHeight) {
+                loseLife();
+            }
+           
+            updateBirdPosition();
+            createNewClouds();
+           
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function moveAllClouds() {
+            clouds.forEach(cloud => {
+                cloud.y += currentScrollSpeed;
+                cloud.element.style.top = cloud.y + 'px';
+               
+                if (cloud.y > gameArea.offsetHeight + 100) {
+                    cloud.element.remove();
+                    clouds = clouds.filter(c => c !== cloud);
+                }
+            });
+        }
+
+        function moveEagles() {
+            eagles.forEach(eagle => {
+                if (eagle.active) {
+                    eagle.x += eagle.direction * eagle.speed;
+                    eagle.element.style.left = eagle.x + 'px';
+                   
+                    // Remove eagle when it goes off screen
+                    if ((eagle.direction > 0 && eagle.x > gameArea.offsetWidth + 100) ||
+                        (eagle.direction < 0 && eagle.x < -100)) {
+                        eagle.element.remove();
+                        eagles = eagles.filter(e => e !== eagle);
+                        eagleShown = false;
+                    }
+                }
+            });
+        }
+
+        function checkCloudLanding() {
+            let landed = false;
+           
+            for (const cloud of clouds) {
+                if (birdVelocity.y > 0 &&
+                    birdPosition.x + 40 > cloud.x &&
+                    birdPosition.x + 20 < cloud.x + cloud.width &&
+                    birdPosition.y + 45 >= cloud.y &&
+                    birdPosition.y + 45 <= cloud.y + 20) {
+                   
+                    birdPosition.y = cloud.y - 45;
+                    birdVelocity.y = 0;
+                    landed = true;
+                    consecutiveJumps = 0;
+                    updateJumpCounter();
+                    break;
+                }
+            }
+        }
+
+        function checkEagleCollisions() {
+            for (const eagle of eagles) {
+                if (!eagle.active) continue;
+               
+                const birdBounds = {
+                    left: birdPosition.x,
+                    right: birdPosition.x + 60,
+                    top: birdPosition.y,
+                    bottom: birdPosition.y + 45
+                };
+               
+                const eagleBounds = {
+                    left: eagle.x,
+                    right: eagle.x + 60,
+                    top: eagle.y,
+                    bottom: eagle.y + 60
+                };
+               
+                const isAboveEagle = birdBounds.bottom < eagleBounds.top + 20;
+               
+                if (birdBounds.right > eagleBounds.left &&
+                    birdBounds.left < eagleBounds.right &&
+                    birdBounds.bottom > eagleBounds.top &&
+                    birdBounds.top < eagleBounds.bottom &&
+                    !isAboveEagle) {
+                   
+                    eagle.active = false;
+                    eagle.element.remove();
+                    eagles = eagles.filter(e => e !== eagle);
+                    eagleShown = false;
+                    loseLife();
+                    break;
+                }
+            }
+        }
+
+        function createNewClouds() {
+            let highestCloudY = Infinity;
+            clouds.forEach(cloud => {
+                if (cloud.y < highestCloudY) highestCloudY = cloud.y;
+            });
+           
+            if (highestCloudY > -CLOUD_GAP) {
+                const gameWidth = gameArea.offsetWidth;
+                const numNewClouds = 2 + Math.floor(Math.random() * 3);
+               
+                for (let i = 0; i < numNewClouds; i++) {
+                    const cloudWidth = Math.max(MIN_CLOUD_WIDTH, MAX_CLOUD_WIDTH - (difficultyLevel * 3));
+                    const x = 30 + Math.random() * (gameWidth - 160);
+                    const y = highestCloudY - CLOUD_GAP - (Math.random() * CLOUD_GAP * 0.3);
+                    createCloud(x, y, cloudWidth, 45);
+                }
+            }
+           
+            if (clouds.length > 30) {
+                clouds.sort((a, b) => b.y - a.y);
+                const cloudsToRemove = clouds.slice(25);
+                cloudsToRemove.forEach(cloud => {
+                    cloud.element.remove();
+                    clouds = clouds.filter(c => c !== cloud);
+                });
+            }
+        }
+
+        function makeBirdJump() {
+            if (!gameActive) return;
+           
+            // Prevent multiple jumps in quick succession
+            const now = Date.now();
+            if (now - lastJumpTime < 300) return; // 300ms cooldown
+           
+            if (consecutiveJumps >= maxConsecutiveJumps) {
+                return;
+            }
+           
+            birdVelocity.y = -currentJumpPower; // USE UPDATED JUMP POWER
+            consecutiveJumps++;
+            lastJumpTime = now;
+            updateJumpCounter();
+        }
+
+        function updateJumpCounter() {
+            jumpCounter.textContent = `Jumps: ${consecutiveJumps}/${maxConsecutiveJumps}`;
+        }
+
+        function startMovingLeft() { isMovingLeft = true; }
+        function startMovingRight() { isMovingRight = true; }
+        function stopMovingLeft() { isMovingLeft = false; }
+        function stopMovingRight() { isMovingRight = false; }
+
+        function loseLife() {
+            lives--;
+            updateUI();
+           
+            if (lives <= 0) {
+                gameOver();
+            } else {
+                birdPosition = {
+                    x: gameArea.offsetWidth / 2 - 30,
+                    y: gameArea.offsetHeight - 150
+                };
+                birdVelocity = { x: 0, y: 0 };
+                consecutiveJumps = 0;
+                updateJumpCounter();
+               
+                // Create safety clouds below the bird when respawning
+                createSafetyClouds();
+                updateBirdPosition();
+            }
+        }
+
+        function createSafetyClouds() {
+            const gameWidth = gameArea.offsetWidth;
+            const gameHeight = gameArea.offsetHeight;
+           
+            // Create 2-3 clouds directly below the respawned bird
+            const numSafetyClouds = 2 + Math.floor(Math.random() * 2);
+            for (let i = 0; i < numSafetyClouds; i++) {
+                const x = 50 + Math.random() * (gameWidth - 200);
+                const y = gameHeight - 80 + (i * 100);
+                createCloud(x, y, 120 + Math.random() * 40, 50);
+            }
+        }
+
+        function gameOver() {
+            gameActive = false;
+            finalScoreElement.textContent = score;
+            jumpCounter.style.display = 'none';
+            
+            // If player hasn't used continue yet, offer it
+            if (!hasUsedContinue) {
+                continueScreen.style.display = 'flex';
+                // Reset and prepare the video
+                adVideo.currentTime = 0;
+                adVideo.load(); // Reload the video
+                continueBtn.disabled = true; // Make sure button starts disabled
+                
+                // Auto-play the video when screen shows
+                setTimeout(() => {
+                    adVideo.play().catch(err => {
+                        console.log("Autoplay failed, user must click play:", err);
+                    });
+                }, 100);
+            } else {
+                // Already used continue, go straight to game over
+                gameOverScreen.style.display = 'flex';
+            }
+        }
+
+        function updateUI() {
+            scoreElement.textContent = score;
+            livesElement.textContent = lives;
+        }
+
+        // Event listeners
+        restartBtn.addEventListener('click', () => {
+            gameOverScreen.style.display = 'none';
+            characterScreen.style.display = 'flex';
+            // Reset the continue flag so they can use it again in the new game
+            hasUsedContinue = false;
+        });
+
+        // Continue screen video logic
+        adVideo.addEventListener('ended', () => {
+            // Enable continue button when video finishes
+            continueBtn.disabled = false;
+        });
+
+        // Also enable if user manually seeks to the end
+        adVideo.addEventListener('timeupdate', () => {
+            // If video is at 95% or more, consider it watched
+            if (adVideo.duration > 0 && (adVideo.currentTime / adVideo.duration) >= 0.95) {
+                continueBtn.disabled = false;
+            }
+        });
+
+        continueBtn.addEventListener('click', () => {
+            // Mark that continue has been used
+            hasUsedContinue = true;
+            
+            // Give player an extra life
+            lives = 1;
+            updateUI();
+            
+            // Hide continue screen and resume game
+            continueScreen.style.display = 'none';
+            gameActive = true;
+            jumpCounter.style.display = 'block';
+            
+            // Respawn the bird
+            birdPosition = {
+                x: gameArea.offsetWidth / 2 - 30,
+                y: gameArea.offsetHeight - 150
+            };
+            birdVelocity = { x: 0, y: 0 };
+            consecutiveJumps = 0;
+            updateJumpCounter();
+            createSafetyClouds();
+            updateBirdPosition();
+            
+            // DON'T call requestAnimationFrame - the loop is already running!
+            // Just setting gameActive = true will let it continue
+        });
+
+        endGameBtn.addEventListener('click', () => {
+            // Skip to character selection to start a new game
+            continueScreen.style.display = 'none';
+            characterScreen.style.display = 'flex';
+            hasUsedContinue = false; // Reset for next game
+        });
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && !gameActive && startScreen.style.display !== 'none') {
+                e.preventDefault();
+                startScreen.style.display = 'none';
+                characterScreen.style.display = 'flex';
+            }
+           
+            if (!gameActive) return;
+           
+            if (e.key === 'ArrowLeft') {
+                startMovingLeft();
+            } else if (e.key === 'ArrowRight') {
+                startMovingRight();
+            } else if (e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                makeBirdJump();
+            }
+        });
+       
+        document.addEventListener('keyup', (e) => {
+            if (!gameActive) return;
+           
+            if (e.key === 'ArrowLeft') {
+                stopMovingLeft();
+            } else if (e.key === 'ArrowRight') {
+                stopMovingRight();
+            }
+        });
+
+        // Touch controls - FIXED
+        touchLeft.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameActive) return;
+            startMovingLeft();
+        });
+        
+        touchLeft.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (!gameActive) return;
+            stopMovingLeft();
+        });
+        
+        touchRight.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameActive) return;
+            startMovingRight();
+        });
+        
+        touchRight.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (!gameActive) return;
+            stopMovingRight();
+        });
+        
+        touchJump.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameActive) return;
+            makeBirdJump();
+        });
+
+        // Prevent default touch behavior on game area
+        gameArea.addEventListener('touchstart', (e) => {
+            if (!gameActive) {
+                startScreen.style.display = 'none';
+                characterScreen.style.display = 'flex';
+                return;
+            }
+            e.preventDefault();
+        });
+
+        // Mouse controls for desktop testing
+        touchLeft.addEventListener('mousedown', (e) => {
+            if (!gameActive) return;
+            startMovingLeft();
+        });
+        
+        touchLeft.addEventListener('mouseup', (e) => {
+            if (!gameActive) return;
+            stopMovingLeft();
+        });
+        
+        touchRight.addEventListener('mousedown', (e) => {
+            if (!gameActive) return;
+            startMovingRight();
+        });
+        
+        touchRight.addEventListener('mouseup', (e) => {
+            if (!gameActive) return;
+            stopMovingRight();
+        });
+        
+        touchJump.addEventListener('mousedown', (e) => {
+            if (!gameActive) return;
+            makeBirdJump();
+        });
+    </script>
+</body>
+</html>
